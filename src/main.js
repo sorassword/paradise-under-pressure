@@ -191,22 +191,34 @@ function updateFlowLines(dt){ if(!flowEnabled)return;
 
 // ── state ──
 let actIdx=0,t=0,playing=true,dragging=false,px=0,py=0,velY=0,autoSpin=true;
+let focusActive=false,focusTargetQuat=null;
+let downX=0,downY=0,isClickCandidate=false;
 const dom=renderer.domElement;
-function down(e){dragging=true;autoSpin=false;const p=e.touches?e.touches[0]:e;px=p.clientX;py=p.clientY;}
+function down(e){dragging=true;autoSpin=false;focusActive=false;const p=e.touches?e.touches[0]:e;px=p.clientX;py=p.clientY;downX=px;downY=py;isClickCandidate=true;}
 function moveE(e){const p=e.touches?e.touches[0]:e;const cx=p.clientX,cy=p.clientY;
-  if(dragging){const dx=cx-px,dy=cy-py;globe.rotation.y+=dx*0.005;velY=dx*0.005;globe.rotation.x=clamp(globe.rotation.x+dy*0.005,-0.9,0.9);px=cx;py=cy;}
+  if(dragging){const dx=cx-px,dy=cy-py;if(Math.abs(cx-downX)>6||Math.abs(cy-downY)>6)isClickCandidate=false;
+    globe.rotation.y+=dx*0.005;velY=dx*0.005;globe.rotation.x=clamp(globe.rotation.x+dy*0.005,-0.9,0.9);px=cx;py=cy;}
   ray(cx,cy);}
-function up(){dragging=false;}
+function up(e){dragging=false;
+  if(isClickCandidate){const p=e&&(e.changedTouches?e.changedTouches[0]:e);const cx=p?p.clientX:downX,cy=p?p.clientY:downY;
+    const n=pickIsland(cx,cy); if(n)focusOnIsland(n.key);}
+  isClickCandidate=false;}
 dom.addEventListener('mousedown',down);window.addEventListener('mousemove',moveE);window.addEventListener('mouseup',up);
 dom.addEventListener('touchstart',down,{passive:true});window.addEventListener('touchmove',moveE,{passive:true});window.addEventListener('touchend',up);
 
 const rc=new THREE.Raycaster(),m2=new THREE.Vector2(),tip=document.getElementById('tip');
 let curYear=1995;
-function ray(cx,cy){m2.x=(cx/innerWidth)*2-1;m2.y=-(cy/innerHeight)*2+1;rc.setFromCamera(m2,camera);
+function pickIsland(cx,cy){m2.x=(cx/innerWidth)*2-1;m2.y=-(cy/innerHeight)*2+1;rc.setFromCamera(m2,camera);
   const hit=rc.intersectObjects(nodes.map(n=>n.spr).filter(s=>s.material.opacity>0.05));
-  if(hit.length){const n=nodes.find(o=>o.spr===hit[0].object);const A=ACTS[actIdx];const v=A.value(n.key,curYear);
+  return hit.length?nodes.find(o=>o.spr===hit[0].object):null;}
+function ray(cx,cy){const n=pickIsland(cx,cy);
+  if(n){const A=ACTS[actIdx];const v=A.value(n.key,curYear);
     tip.innerHTML=`<b>${n.label}</b> &nbsp; <span>${A.tip(v)}</span>`;tip.style.left=cx+'px';tip.style.top=cy+'px';tip.style.opacity=1;}
   else tip.style.opacity=0;}
+function focusOnIsland(key){const n=nodes.find(o=>o.key===key); if(!n)return;
+  const dir=n.base.clone().normalize();
+  focusTargetQuat=new THREE.Quaternion().setFromUnitVectors(dir,new THREE.Vector3(0,0,1));
+  focusActive=true; autoSpin=false; velY=0;}
 
 // dock
 const playBtn=document.getElementById('play'),scrub=document.getElementById('scrub'),actsEl=document.getElementById('acts'),flowBtn=document.getElementById('flowToggle');
@@ -276,7 +288,13 @@ function animate(){requestAnimationFrame(animate);
   const now=performance.now(),dt=Math.min((now-prev)/1000,0.05);prev=now;
   if(playing){t+=dt*0.045;if(t>=1){t=1;if(actIdx<ACTS.length-1){gotoAct(actIdx+1);}else{playing=false;playBtn.textContent='►';}}}
   scrub.value=t*1000;
-  if(!dragging){if(autoSpin)globe.rotation.y+=0.0006;else{globe.rotation.y+=velY;velY*=0.94;if(Math.abs(velY)<0.0002)velY=0;}}
+  if(!dragging){
+    if(focusActive){
+      globe.quaternion.slerp(focusTargetQuat,clamp(dt*3,0,1));
+      if(globe.quaternion.angleTo(focusTargetQuat)<0.01){focusActive=false;autoSpin=true;}
+    } else if(autoSpin){globe.rotation.y+=0.0006;}
+    else{globe.rotation.y+=velY;velY*=0.94;if(Math.abs(velY)<0.0002)velY=0;}
+  }
   globe.updateMatrixWorld(); update(dt); updateFlowLines(dt); renderer.render(scene,camera);}
 function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
 window.addEventListener('resize',resize);resize();
