@@ -32,6 +32,9 @@
   #scrub{-webkit-appearance:none;appearance:none;flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.15);cursor:pointer;outline:none}
   #scrub::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#ffb070;box-shadow:0 0 12px #ffb07088;cursor:pointer}
   #scrub::-moz-range-thumb{width:13px;height:13px;border:none;border-radius:50%;background:#ffb070;cursor:pointer}
+  #flowToggle{flex:0 0 auto;height:40px;padding:0 16px;border-radius:20px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.04);color:#8fa7a5;cursor:pointer;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;transition:color .2s,border-color .2s,background .2s}
+  #flowToggle:hover{background:rgba(255,255,255,.12)}
+  #flowToggle.on{color:#fff;border-color:#ffb070;background:rgba(255,176,112,.14)}
   #acts{display:flex;gap:0;justify-content:space-between}
   .act{flex:1;text-align:center;cursor:pointer;padding:8px 4px;border-top:1px solid rgba(255,255,255,.12);transition:color .25s,border-color .25s;color:#5f7a7a;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
   .act:hover{color:#cfe3e0}

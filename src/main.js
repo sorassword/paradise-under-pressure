@@ -151,6 +151,44 @@ const nodes=ISLANDS.map(([key,label,lat,lon])=>{
 });
 globe.rotation.y=THREE.MathUtils.degToRad(90-188); globe.rotation.x=THREE.MathUtils.degToRad(8);
 
+// ── responsibility flow-lines (Act III: "least cause, greatest cost") ──
+// Placeholder emitter coordinates — swap for precise capitals/centroids once real per-country
+// emissions figures are wired in.
+const EMITTERS=[["USA",39.8,-98.6],["China",35.0,105.0],["EU",50.0,10.0],["Australia",-25.0,133.0]];
+const RESPONSIBILITY_TARGETS=["Tuvalu","Kiribati","Marshall Islands","Fiji","Vanuatu","Solomon Islands","Tonga"];
+let flowEnabled=false;
+const FLOWLINES=[];
+function addFlowLine(fromLatLng,toLatLng,options={}){
+  const opts=Object.assign({color:0xffb46a,opacity:0.26,particleCount:2,speed:0.12,arcHeight:0.3},options);
+  const from=llv(fromLatLng[0],fromLatLng[1],1.001);
+  const to=llv(toLatLng[0],toLatLng[1],1.001);
+  const control=new THREE.Vector3().addVectors(from,to).multiplyScalar(0.5);
+  const chordFrac=clamp(from.distanceTo(to)/2,0,1);
+  control.normalize().multiplyScalar(1+opts.arcHeight*(0.4+chordFrac));
+  const curve=new THREE.QuadraticBezierCurve3(from,control,to);
+  const geo=new THREE.BufferGeometry().setFromPoints(curve.getPoints(48));
+  const mat=new THREE.LineBasicMaterial({color:opts.color,transparent:true,opacity:opts.opacity,blending:THREE.AdditiveBlending,depthWrite:false});
+  const line=new THREE.Line(geo,mat); line.visible=false; globe.add(line);
+  const particles=[];
+  for(let i=0;i<opts.particleCount;i++){
+    const pmat=new THREE.SpriteMaterial({map:GTEX,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:opts.opacity*1.8});
+    const spr=new THREE.Sprite(pmat); spr.scale.set(0.055,0.055,1); spr.visible=false; globe.add(spr);
+    particles.push({spr,t:i/opts.particleCount});
+  }
+  const fl={curve,line,particles,speed:opts.speed};
+  FLOWLINES.push(fl); return fl;
+}
+RESPONSIBILITY_TARGETS.forEach(key=>{
+  const isl=ISLANDS.find(i=>i[0]===key); if(!isl)return;
+  EMITTERS.forEach(([,lat,lon])=>addFlowLine([lat,lon],[isl[2],isl[3]]));
+});
+function setFlowLines(on){ flowEnabled=on; FLOWLINES.forEach(fl=>{ fl.line.visible=on; fl.particles.forEach(p=>p.spr.visible=on); }); }
+function updateFlowLines(dt){ if(!flowEnabled)return;
+  FLOWLINES.forEach(fl=>fl.particles.forEach(p=>{
+    p.t+=dt*fl.speed; if(p.t>1)p.t-=1;
+    p.spr.position.copy(fl.curve.getPointAt(clamp(p.t,0,0.999)));
+  })); }
+
 // ── state ──
 let actIdx=0,t=0,playing=true,dragging=false,px=0,py=0,velY=0,autoSpin=true;
 const dom=renderer.domElement;
@@ -171,10 +209,11 @@ function ray(cx,cy){m2.x=(cx/innerWidth)*2-1;m2.y=-(cy/innerHeight)*2+1;rc.setFr
   else tip.style.opacity=0;}
 
 // dock
-const playBtn=document.getElementById('play'),scrub=document.getElementById('scrub'),actsEl=document.getElementById('acts');
+const playBtn=document.getElementById('play'),scrub=document.getElementById('scrub'),actsEl=document.getElementById('acts'),flowBtn=document.getElementById('flowToggle');
 ACTS.forEach((a,i)=>{const d=document.createElement('div');d.className='act';d.textContent=a.num;d.onclick=()=>gotoAct(i);actsEl.appendChild(d);});
 playBtn.onclick=()=>{playing=!playing;playBtn.textContent=playing?'❚❚':'►';};
 scrub.oninput=()=>{playing=false;playBtn.textContent='►';t=scrub.value/1000;};
+flowBtn.onclick=()=>{setFlowLines(!flowEnabled);flowBtn.classList.toggle('on',flowEnabled);};
 function gotoAct(i){actIdx=i;t=0;playing=true;playBtn.textContent='❚❚';refreshActUI();}
 
 const elNum=document.querySelector('#actband .num'),elTitle=document.querySelector('#actband h1'),
@@ -238,7 +277,7 @@ function animate(){requestAnimationFrame(animate);
   if(playing){t+=dt*0.045;if(t>=1){t=1;if(actIdx<ACTS.length-1){gotoAct(actIdx+1);}else{playing=false;playBtn.textContent='►';}}}
   scrub.value=t*1000;
   if(!dragging){if(autoSpin)globe.rotation.y+=0.0006;else{globe.rotation.y+=velY;velY*=0.94;if(Math.abs(velY)<0.0002)velY=0;}}
-  globe.updateMatrixWorld(); update(dt); renderer.render(scene,camera);}
+  globe.updateMatrixWorld(); update(dt); updateFlowLines(dt); renderer.render(scene,camera);}
 function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
 window.addEventListener('resize',resize);resize();
 refreshActUI();playBtn.textContent='❚❚';animate();
