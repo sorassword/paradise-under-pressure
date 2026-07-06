@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paradise under pressure — dress rehearsal</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="labels"></div>
+
+  <div class="ui" id="brand">Paradise under pressure</div>
+  <div class="ui" id="actband"><div class="num"></div><h1></h1></div>
+  <div class="ui" id="year"><div class="big">1995</div><div class="lab"></div></div>
+  <div class="ui" id="caption"></div>
+  <div class="ui" id="legend"></div>
+  <div class="ui" id="hint">Drag to rotate</div>
+
+  <div id="dock">
+    <div id="transport">
+      <button id="play">❚❚</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" />
+    </div>
+    <div id="acts"></div>
+  </div>
+
+  <div id="tip"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
