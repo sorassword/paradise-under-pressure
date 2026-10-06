@@ -1,26 +1,52 @@
-# Paradise under Pressure
+<div align="center">
 
-A cinematic 3D-globe data visualization of Pacific island nations — tourism, ocean warming,
-greenhouse-gas emissions, natural disasters, and renewable energy — told across a five-act
-scroll narrative. University project (also a competition submission); the goal is a story,
-not a dashboard.
+# 🌏 Paradise under Pressure
 
-![screenshot placeholder](docs/screenshot.png)
+**A cinematic 3D-globe data story about Pacific island nations – tourism, ocean warming, emissions, natural disasters and renewable energy.**
+
+[**▶ Live demo**](https://sorassword.github.io/paradise-under-pressure/) · [Data sources](#data-sources) · [Run locally](#local-setup)
+
+![Three.js](https://img.shields.io/badge/Three.js-r128-000?logo=three.js&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-vanilla-F7DF1E?logo=javascript&logoColor=black)
+![No build step](https://img.shields.io/badge/build-none-2ea44f)
+![Deploy](https://github.com/sorassword/paradise-under-pressure/actions/workflows/pages.yml/badge.svg)
+
+<a href="https://sorassword.github.io/paradise-under-pressure/"><img width="560" alt="Paradise under Pressure – interactive 3D globe of the Pacific" src="https://github.com/user-attachments/assets/c83d3406-2334-4904-8fa4-96a1f769f537" /></a>
+
+</div>
+
+## About
+
+Small island states in the Pacific depend on tourism, yet they emit almost nothing and are hit hardest by a warming ocean and more frequent disasters. **Paradise under Pressure** tells that story on an interactive globe: data layers are stacked act by act, so the viewer *feels* the contrast instead of reading a dashboard.
+
+University project (HSD Düsseldorf) and competition submission – the goal is a story, not a dashboard.
+
+## Features
+
+- **Interactive 3D globe** – drag to rotate, scroll to zoom, click an island to focus the camera on it
+- **Five data layers** – tourism (overnight visitors), sea-surface temperature anomaly, greenhouse-gas emissions, natural disasters, renewable energy
+- **Timeline playback** – scrub or play through the years and watch the layers evolve
+- **Five-act narrative** – each act adds one layer and one insight
+- **Zero build, zero backend** – plain HTML/CSS/JS + Three.js from a CDN, data shipped as static JSON
 
 ## Tech stack
 
-- Three.js r128 (CDN, global namespace, no bundler)
-- Vanilla JS / HTML / CSS
-- Data: static JSON, no backend
+| Area | Choice |
+|---|---|
+| Rendering | Three.js r128 + OrbitControls (CDN, no bundler) |
+| Frontend | Vanilla JavaScript, HTML, CSS |
+| Data | Static JSON prepared from SPC tables |
+| Hosting | GitHub Pages via GitHub Actions |
 
 ## Local setup
 
 ```bash
-cd src
+git clone https://github.com/sorassword/paradise-under-pressure.git
+cd paradise-under-pressure/src
 python -m http.server
 ```
 
-Then open `http://localhost:8000`.
+Then open http://localhost:8000.
 
 ## Data sources
 
